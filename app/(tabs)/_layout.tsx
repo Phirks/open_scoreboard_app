@@ -36,15 +36,15 @@ const TabsLayout = () => {
         }}
       >
         <Tabs.Screen 
-          name = "home"
+          name = "scoreboard"
           options ={{
-            title: 'Home',
+            title: 'Scoreboard',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 icon={icons.home}
                 color={color}
-                name="Home"
+                name="Scoreboard"
                 focused={focused}
               />
             )
@@ -52,15 +52,15 @@ const TabsLayout = () => {
         />
         
         <Tabs.Screen 
-          name = "create"
+          name = "timer"
           options ={{
-            title: 'Create',
+            title: 'Timer',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 icon={icons.plus}
                 color={color}
-                name="Create"
+                name="Timer"
                 focused={focused}
               />
             )
@@ -68,20 +68,36 @@ const TabsLayout = () => {
         />
       
         <Tabs.Screen 
-          name = "profile"
+          name = "clock"
           options ={{
-            title: 'Profile',
+            title: 'Clock',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 icon={icons.profile}
                 color={color}
-                name="Profile"
+                name="Clock"
                 focused={focused}
               />
             )
           }}          
         />
+        <Tabs.Screen 
+          name = "settings"
+          options ={{
+            title: 'Settings',
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.profile}
+                color={color}
+                name="Settings"
+                focused={focused}
+              />
+            )
+          }}          
+        />
+        
       </Tabs>
     </>
   )
