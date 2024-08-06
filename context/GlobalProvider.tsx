@@ -1,11 +1,16 @@
 import { Children } from "react";
 import { createContext, useContext, useState, useEffect } from "react";
-import { getCurrentUser } from '../lib/appwrite.js'
-import { BLEService } from '../services'
-import { BleManager, Device } from "react-native-ble-plx";
+import { getCurrentUser } from '../lib/appwrite'
+import { BLEService } from '../services/index'
+import { BleManager, Characteristic, Device } from "react-native-ble-plx";
 
 const GlobalContext = createContext();
 export const useGlobalContext = () => useContext(GlobalContext);
+
+
+
+
+
 
 const GlobalProvider = ({ children }) => {
     const [BLEService2] = useState(BLEService)

@@ -6,10 +6,9 @@ import 'react-native-url-polyfill/auto'
 
 import { images } from '../constants'
 import CustomButton from "../components/CustomButton";
-import { useGlobalContext } from "../context/GlobalProvider";
-import { signOut } from "@/lib/appwrite";
+import { useGlobalContext, startMonitoringCharactaristicRX} from "../context/GlobalProvider";
 import { BleManager, Device } from 'react-native-ble-plx'
-//import { BLEService } from "@/services";
+import { BLEService } from "@/services";
 import { useState } from "react";
 
 type DeviceExtendedByUpdateTime = Device
@@ -33,8 +32,9 @@ export default function App() {
       console.log("connected")
       await device.discoverAllServicesAndCharacteristics()
       console.log("discovered")
-      await setConnectedDevice(device)
+      setConnectedDevice(device)
       console.log("contexted")
+      startMonitoringCharactaristicRX(BLEService2)
       router.push("/scoreboard")
     }
   }
