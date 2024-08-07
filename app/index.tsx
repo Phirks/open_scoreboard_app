@@ -3,10 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import { Redirect, router } from 'expo-router';
 import { SafeAreaView } from "react-native-safe-area-context";
 import 'react-native-url-polyfill/auto'
-
+import base64 from 'react-native-base64'
 import { images } from '../constants'
 import CustomButton from "../components/CustomButton";
-import { useGlobalContext, startMonitoringCharactaristicRX} from "../context/GlobalProvider";
+import { useGlobalContext } from "../context/GlobalProvider";
 import { BleManager, Device } from 'react-native-ble-plx'
 import { BLEService } from "@/services";
 import { useState } from "react";
@@ -18,23 +18,49 @@ type DeviceExtendedByUpdateTime = Device
 const MIN_TIME_BEFORE_UPDATE_IN_MILLISECONDS = 5000
 
 
+
+function convertStringToByteArray(str: String) {
+  var bytes = [];
+  for (var i = 0; i < str.length; ++i) {
+    bytes.push(str.charCodeAt(i));
+  }
+  return bytes
+}
+
+
+
 export default function App() {
-  //const [foundDevices, setFoundDevices] = useState<DeviceExtendedByUpdateTime[]>([])
-  const { isLoading, isConnected, BLEService2, connectedDevice, setConnectedDevice } = useGlobalContext();
+  const { isLoading, isConnected, BLEService2, connectedDevice, setConnectedDevice, setRightScore, setLeftScore } = useGlobalContext();
   if (!isLoading && isConnected) return <Redirect href="/scoreboard" />
   BLEService2.initializeBLE()
   const onScanFoundDevice = async (device: Device) => {
     if (device.name === 'Nordic_UART_Service') {
       BLEService2.manager.stopDeviceScan
-      
+
       console.log(device.name)
-      await device.connect()
-      console.log("connected")
-      await device.discoverAllServicesAndCharacteristics()
-      console.log("discovered")
-      setConnectedDevice(device)
-      console.log("contexted")
-      startMonitoringCharactaristicRX(BLEService2)
+      try {
+        await device.connect()
+        await device.discoverAllServicesAndCharacteristics();
+        BLEService2.manager.monitorCharacteristicForDevice(device.id, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400003-b5a3-f393-e0a9-e50e24dcca9e", (error, characteristic) => {
+          if (error) { console.log(error) }
+          let data = convertStringToByteArray(base64.decode(characteristic.value))
+          switch (data[0]) {
+            case 0:
+              setRightScore(data[1])
+              break;
+            case 1:
+              setLeftScore(data[1])
+              break;
+            default:
+              break;
+          }
+        })
+        await setConnectedDevice(device)
+      } catch (error) {
+        console.log(error)
+      }
+
+
       router.push("/scoreboard")
     }
   }
@@ -70,10 +96,10 @@ export default function App() {
             handlePress={() => {
               //setFoundDevices([])
               // BLEService.initializeBLE().then(() => BLEService.scanDevices(onScanFoundDevice, null, false))
-              if(connectedDevice===null){
-              BLEService2.scanDevices(onScanFoundDevice, null, false)
+              if (connectedDevice === null) {
+                BLEService2.scanDevices(onScanFoundDevice, null, false)
               }
-              else{
+              else {
                 router.push("/scoreboard")
               }
             }}
@@ -87,3 +113,5 @@ export default function App() {
     </SafeAreaView>
   );
 }
+
+

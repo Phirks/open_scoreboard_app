@@ -1,6 +1,6 @@
 import { View, Text, SafeAreaView } from 'react-native'
 import React from 'react'
-import { useGlobalContext, monitorSetup } from "../../context/GlobalProvider";
+import { useGlobalContext } from "../../context/GlobalProvider";
 import CustomButton from "../../components/CustomButton"
 import { BleManager, Device } from 'react-native-ble-plx'
 import { useState } from "react";
@@ -11,24 +11,29 @@ const charactaristicRX = (error, characteristic) => {
   console.log(characteristic)
 }
 const Scoreboard = () => {
-  const { BLEService2, connectedDevice } = useGlobalContext();
+  const { BLEService2, connectedDevice, rightScore, leftScore, setRightScore, setLeftScore } = useGlobalContext();
+
+
 
 
 
   return (
-    <SafeAreaView className='bg-primary mt-6 h-full w-full items-start'>
-      <View className='items-center w-full'>
-      <CustomButton
-            title=" Setup Connection "
-            handlePress={() => {
-              monitorSetup(BLEService2.manager,connectedDevice.id)
-            }}
-            containerStyles='mt-7 mx-4 bg-red-500'
-            textStyles={'text-3xl'}
-          />
+    <SafeAreaView className='bg-primary mt-6 h-full w-full items-center'>
+      <View className='h-full, w-full flex-row items-start'>
+        <CustomButton
+          title="Reset scores (Longpress)"
+          handleLongPress={() => {
+            setRightScore(0)
+            setLeftScore(0)
+            connectedDevice.writeCharacteristicWithoutResponseForService("6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", "BA==")
+          }}
+          containerStyles='mt-7 mx-4 bg-white flex-[90%]'
+          textStyles={'text-3xl'}
+        />
       </View>
+
       <View className='h-full w-full flex-row items-start'>
-        <View className="space-y-3 pb-5 flex-grow">
+        <View className="space-y-3 pb-5 flex-[40%]">
           <CustomButton
             title="+"
             handlePress={() => {
@@ -37,6 +42,9 @@ const Scoreboard = () => {
             containerStyles='mt-7 mx-4 bg-red-500'
             textStyles={'text-3xl'}
           />
+          <Text className='text-gray-100 text-9xl text-center pt-7'>
+            {leftScore < 10 ? '0' : ''}{leftScore}
+          </Text>
 
           <CustomButton
             title="-"
@@ -47,7 +55,7 @@ const Scoreboard = () => {
             textStyles={'text-3xl'}
           />
         </View>
-        <View className="space-y-3 pb-5 flex-grow">
+        <View className="space-y-3 pb-5 flex-[40%]">
           <CustomButton
             title="+"
             handlePress={() => {
@@ -56,6 +64,9 @@ const Scoreboard = () => {
             containerStyles='mt-7 mx-4 bg-blue-500'
             textStyles={'text-3xl'}
           />
+          <Text className='text-gray-100 text-9xl text-center pt-7'>
+            {rightScore < 10 ? '0' : ''}{rightScore}
+          </Text>
           <CustomButton
             title="-"
             handlePress={() => {
@@ -69,5 +80,11 @@ const Scoreboard = () => {
     </SafeAreaView>
   )
 }
+
+const setupConnection = async () => {
+  const { BLEService2, connectedDevice } = useGlobalContext();
+  await monitorSetup(BLEService2.manager, connectedDevice.id)
+}
+
 
 export default Scoreboard
