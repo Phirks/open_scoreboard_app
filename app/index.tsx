@@ -7,8 +7,8 @@ import base64 from 'react-native-base64'
 import { images } from '../constants'
 import CustomButton from "../components/CustomButton";
 import { useGlobalContext } from "../context/GlobalProvider";
-import { BleManager, Device } from 'react-native-ble-plx'
-import { BLEService } from "@/services";
+// import { BleManager, Device } from 'react-native-ble-plx'
+// import { BLEService } from "@/services";
 import { useState } from "react";
 
 type DeviceExtendedByUpdateTime = Device
@@ -30,88 +30,89 @@ function convertStringToByteArray(str: String) {
 
 
 export default function App() {
-  const { isLoading, isConnected, BLEService2, connectedDevice, setConnectedDevice, setRightScore, setLeftScore } = useGlobalContext();
+  //const { isLoading, isConnected, BLEService2, connectedDevice, setConnectedDevice, setRightScore, setLeftScore } = useGlobalContext();
+  const { isLoading, isConnected, setRightScore, setLeftScore } = useGlobalContext();
   if (!isLoading && isConnected) return <Redirect href="/scoreboard" />
-  BLEService2.initializeBLE()
+  // BLEService2.initializeBLE()
   const onScanFoundDevice = async (device: Device) => {
     if (device.name === 'Nordic_UART_Service') {
-      BLEService2.manager.stopDeviceScan
+      // BLEService2.manager.stopDeviceScan
 
       console.log(device.name)
       try {
-        await device.connect()
-        await device.discoverAllServicesAndCharacteristics();
-        BLEService2.manager.monitorCharacteristicForDevice(device.id, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400003-b5a3-f393-e0a9-e50e24dcca9e", (error, characteristic) => {
-          if (error) { console.log(error) }
-          let data = convertStringToByteArray(base64.decode(characteristic.value))
-          switch (data[0]) {
-            case 0:
-              setRightScore(data[1])
-              break;
-            case 1:
-              setLeftScore(data[1])
-              break;
-            default:
-              break;
-          }
-        })
-        await setConnectedDevice(device)
-      } catch (error) {
-        console.log(error)
+        //   await device.connect()
+        //   await device.discoverAllServicesAndCharacteristics();
+        //   BLEService2.manager.monitorCharacteristicForDevice(device.id, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400003-b5a3-f393-e0a9-e50e24dcca9e", (error, characteristic) => {
+        //     if (error) { console.log(error) }
+        //     let data = convertStringToByteArray(base64.decode(characteristic.value))
+        //     switch (data[0]) {
+        //       case 0:
+        //         setRightScore(data[1])
+        //         break;
+        //       case 1:
+        //         setLeftScore(data[1])
+        //         break;
+        //       default:
+        //         break;
+        //     }
+        //   })
+        //   await setConnectedDevice(device)
+        // } catch (error) {
+        //   console.log(error)
+        // }
+
+
+        router.push("/scoreboard")
       }
-
-
-      router.push("/scoreboard")
-    }
   }
 
-  return (
-    <SafeAreaView className="bg-primary h-full">
-      <ScrollView contentContainerStyle={{ height: '100%' }}>
-        <View className="w-full justify-center items-center min-h-[85vh] px-4">
-          <Image
-            source={images.logo}
-            className="w-[130px] h-[84px]"
-            resizeMode="contain"
-          />
-          <Image
-            source={images.cards}
-            className="max-w-[380px] w-full h-[300px]"
-            resizeMode="contain"
-          />
-          <View className="relative mt-5">
-            <Text className="text-3xl text-white font-bold text-center">
-              Discover Endless Possibilities with{' '}
-              <Text className='text-orange-400'>Aora</Text>
-            </Text>
+    return (
+      <SafeAreaView className="bg-primary h-full">
+        <ScrollView contentContainerStyle={{ height: '100%' }}>
+          <View className="w-full justify-center items-center min-h-[85vh] px-4">
             <Image
-              source={images.path}
-              className="w-[136px] h-[15px] absolute -bottom-2 -right-8"
+              source={images.logo}
+              className="w-[130px] h-[84px]"
               resizeMode="contain"
             />
+            <Image
+              source={images.cards}
+              className="max-w-[380px] w-full h-[300px]"
+              resizeMode="contain"
+            />
+            <View className="relative mt-5">
+              <Text className="text-3xl text-white font-bold text-center">
+                Discover Endless Possibilities with{' '}
+                <Text className='text-orange-400'>Aora</Text>
+              </Text>
+              <Image
+                source={images.path}
+                className="w-[136px] h-[15px] absolute -bottom-2 -right-8"
+                resizeMode="contain"
+              />
+            </View>
+            <Text className="text-sm font-pregular text-gray-100 mt-7 text-center">Where creativity meets innovation: embark on a journey of limitless  exploration with Aora</Text>
+            <CustomButton
+              title="Connect To Device"
+              handlePress={() => {
+                //setFoundDevices([])
+                // BLEService.initializeBLE().then(() => BLEService.scanDevices(onScanFoundDevice, null, false))
+                if (connectedDevice === null) {
+                  BLEService2.scanDevices(onScanFoundDevice, null, false)
+                }
+                else {
+                  router.push("/scoreboard")
+                }
+              }}
+              containerStyles="w-full mt-7" textStyles={undefined} isLoading={undefined}            >
+            </CustomButton>
           </View>
-          <Text className="text-sm font-pregular text-gray-100 mt-7 text-center">Where creativity meets innovation: embark on a journey of limitless  exploration with Aora</Text>
-          <CustomButton
-            title="Connect To Device"
-            handlePress={() => {
-              //setFoundDevices([])
-              // BLEService.initializeBLE().then(() => BLEService.scanDevices(onScanFoundDevice, null, false))
-              if (connectedDevice === null) {
-                BLEService2.scanDevices(onScanFoundDevice, null, false)
-              }
-              else {
-                router.push("/scoreboard")
-              }
-            }}
-            containerStyles="w-full mt-7" textStyles={undefined} isLoading={undefined}            >
-          </CustomButton>
-        </View>
 
 
-      </ScrollView>
-      <StatusBar backgroundColor="#161622" style="light" />
-    </SafeAreaView>
-  );
-}
+        </ScrollView>
+        <StatusBar backgroundColor="#161622" style="light" />
+      </SafeAreaView>
+    );
+  }
 
 
