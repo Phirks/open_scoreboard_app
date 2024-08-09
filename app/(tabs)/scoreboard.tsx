@@ -6,6 +6,8 @@ import { BleManager, Device } from 'react-native-ble-plx'
 import { useState } from "react";
 import base64 from 'react-native-base64'
 
+
+
 const Buffer = require("buffer").Buffer;
 const charactaristicRX = (error, characteristic) => {
   console.log(characteristic)

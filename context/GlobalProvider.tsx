@@ -2,7 +2,16 @@ import { Children } from "react";
 import { createContext, useContext, useState, useEffect } from "react";
 import { getCurrentUser } from '../lib/appwrite'
 import { BLEService } from '../services/index'
-import { BleManager, Characteristic, Device } from "react-native-ble-plx";
+//import { BleManager, Characteristic, Device } from "react-native-ble-plx";
+import BleManager, {
+    BleDisconnectPeripheralEvent,
+    BleManagerDidUpdateValueForCharacteristicEvent,
+    BleScanCallbackType,
+    BleScanMatchMode,
+    BleScanMode,
+    Peripheral,
+    PeripheralInfo,
+} from 'react-native-ble-manager';
 
 
 const GlobalContext = createContext();
@@ -23,6 +32,10 @@ const GlobalProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [rightScore, setRightScore] = useState(-1)
     const [leftScore, setLeftScore] = useState(-1)
+    const [isScanning, setIsScanning] = useState(false);
+    const [peripherals, setPeripherals] = useState(
+        new Map<Peripheral['id'], Peripheral>(),
+    );
 
 
 
@@ -55,6 +68,10 @@ const GlobalProvider = ({ children }) => {
                 setRightScore,
                 leftScore,
                 setLeftScore,
+                isScanning,
+                setIsScanning,
+                peripherals,
+                setPeripherals,
             }}
         >
             {children}
