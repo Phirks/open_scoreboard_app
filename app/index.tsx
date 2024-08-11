@@ -32,13 +32,17 @@ import BleManager, {
     Peripheral,
     PeripheralInfo,
 } from 'react-native-ble-manager';
+import { router } from 'expo-router';
+import { jsiConfigureProps } from 'react-native-reanimated/lib/typescript/reanimated2/core';
 
-const SECONDS_TO_SCAN_FOR = 3;
+const SECONDS_TO_SCAN_FOR = 1;
 const SERVICE_UUIDS: string[] = [];
 const ALLOW_DUPLICATES = true;
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+
+
 
 declare module 'react-native-ble-manager' {
     // enrich local contract with custom state properties needed by App.tsx
@@ -49,10 +53,8 @@ declare module 'react-native-ble-manager' {
 }
 
 export default function App() {
-    const { isScanning, setIsScanning, peripherals, setPeripherals } = useGlobalContext();
-    //   const navigation = useNavigation();
+    const { leftScore, setLeftScore, rightScore, setRightScore, expectedLeftScore, setExpectedLeftScore, expectedRightScore, setExpectedRightScore, isScanning, setIsScanning, peripherals, setPeripherals, bleManagerEmitter2, setBleManagerEmitter2 } = useGlobalContext();
 
-    //console.debug('peripherals map updated', [...peripherals.entries()]);
 
     const startScan = () => {
         if (!isScanning) {
@@ -376,6 +378,20 @@ export default function App() {
             ),
         ];
 
+        bleManagerEmitter.addListener('BleManagerDidUpdateValueForCharacteristic', ({ value, peripheral, characteristic, service }) => {
+            switch (value[0]) {
+                case 0:
+                    setRightScore(value[1])
+                    break;
+                case 1:
+                    setLeftScore(value[1])
+                    break;
+                default:
+                    console.log("default")
+                    break;
+            }
+        })
+
         handleAndroidPermissions();
 
         return () => {
@@ -476,8 +492,11 @@ export default function App() {
                         <>
                             <View style={styles.buttonGroup}>
                                 <Pressable style={styles.scanButton} onPress={() => {
-                                    console.log("send")
-                                    BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x03])
+                                    console.log(JSON.stringify(peripherals, null, 4))
+
+                                    BleManager.startNotification("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400003-b5a3-f393-e0a9-e50e24dcca9e")
+
+                                    router.push("/scoreboard")
                                 }}>
                                     <Text style={styles.scanButtonText}>
                                         {'Scan Companion'}

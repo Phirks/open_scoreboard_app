@@ -30,25 +30,22 @@ const GlobalProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [rightScore, setRightScore] = useState(-1)
-    const [leftScore, setLeftScore] = useState(-1)
+    const [rightScore, setRightScore] = useState(0)
+    const [leftScore, setLeftScore] = useState(0)
+    const [expectedRightScore, setExpectedRightScore] = useState(0)
+    const [expectedLeftScore, setExpectedLeftScore] = useState(0)
     const [isScanning, setIsScanning] = useState(false);
     const [peripherals, setPeripherals] = useState(
         new Map<Peripheral['id'], Peripheral>(),
     );
+    const [bleManagerEmitter2, setBleManagerEmitter2] = useState(null)
 
 
 
 
 
     useEffect(() => {
-        setConnectedDevice(BLEService2.getDevice())
-        if (connectedDevice === null) {
-            setIsConnected(false)
-        }
-        else {
-            setIsConnected(true)
-        }
+
     }, []);
     return (
         <GlobalContext.Provider
@@ -72,6 +69,12 @@ const GlobalProvider = ({ children }) => {
                 setIsScanning,
                 peripherals,
                 setPeripherals,
+                bleManagerEmitter2,
+                setBleManagerEmitter2,
+                expectedRightScore,
+                setExpectedRightScore,
+                expectedLeftScore,
+                setExpectedLeftScore,
             }}
         >
             {children}
