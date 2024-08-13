@@ -93,9 +93,9 @@ const Scoreboard = () => {
           />
         </View>
       </View>
-      <View className='w-[100%] h-[5%] mb-10 flex-1'>
+      {/* <View className='w-[100%] h-[5%] mb-10 flex-1'>
         <LinearGradient className='flex-1 items-center' colors={['white', 'transparent']} end={[]} />
-      </View>
+      </View> */}
       {/* <MaskedView className='h-[10%] w-10 flex-1 items-center justify-center bg-white'
         maskElement={
           <LinearGradient className='flex-1 h-[100%] w-[100%]  items-center' colors={['white', 'transparent']} />
