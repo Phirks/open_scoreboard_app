@@ -28,8 +28,8 @@ const Scoreboard = () => {
 
 
   return (
-    <SafeAreaView className='bg-primary h-full w-full items-center'>
-      <View className='h-full, w-full flex-row items-start mt-5'>
+    <SafeAreaView className='bg-primary h-full w-full '>
+      <View className='flex-row items-center mt-7'>
         <CustomButton
           title="Reset scores (Longpress)"
           handleLongPress={() => {
@@ -42,57 +42,75 @@ const Scoreboard = () => {
         />
       </View>
 
-      <View className='h-[50%] w-full flex-row items-end'>
-        <View className="space-y-3 pb-5 flex-[40%]">
+      <View className='w-full flex-row items-start'>
+        <View className="space-y-3 flex-[40%]">
           <CustomButton
             title="+"
             handlePress={() => {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x00])
-              if (leftScore < 199) { setLeftScore(leftScore + 1) }
+              if (leftScore < 199) {
+                BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x00])
+                setLeftScore(leftScore + 1)
+              }
             }}
             containerStyles='mt-7 mx-4 bg-red-500'
             textStyles={'text-3xl'}
           />
-          <Text className='text-gray-100 text-9xl text-center pt-7'>
+          <Text className={`text-gray-100 ${leftScore > 99 ? 'text-8xl top-5' : 'text-9xl top-2'} text-center  min-h-[16%]`}>
             {leftScore < 10 ? '0' : ''}{leftScore}
           </Text>
 
           <CustomButton
             title="-"
             handlePress={() => {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x01])
-              if (leftScore > 0) { setLeftScore(leftScore - 1) }
+              if (leftScore > 0) {
+                BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x01])
+                setLeftScore(leftScore - 1)
+              }
             }}
-            containerStyles='mt-7 mx-4 bg-red-500'
+            containerStyles='mx-4 bg-red-500'
             textStyles={'text-3xl'}
           />
         </View>
-        <View className="space-y-3 pb-5 flex-[40%]">
+        <View className="space-y-3 flex-[40%]">
           <CustomButton
             title="+"
             handlePress={() => {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x02])
-              if (rightScore < 199) { setRightScore(rightScore + 1) }
-            }}
-            containerStyles='mt-7 mx-4 bg-blue-500'
-            textStyles={'text-3xl'}
-          />
-          <Text className='text-gray-100 text-9xl text-center pt-7'>
-            {rightScore < 10 ? '0' : ''}{rightScore}
-          </Text>
-          <CustomButton
-            title="-"
-            handlePress={() => {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x03])
-              if (rightScore > 0) {
-                setRightScore(rightScore - 1)
+              if (rightScore < 199) {
+                BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x02])
+                setRightScore(rightScore + 1)
               }
             }}
             containerStyles='mt-7 mx-4 bg-blue-500'
             textStyles={'text-3xl'}
           />
+          <Text className={`text-gray-100 ${rightScore > 99 ? 'text-8xl top-5' : 'text-9xl top-2'} text-center  min-h-[16%]`}>
+            {rightScore < 10 ? '0' : ''}{rightScore}
+          </Text>
+          <CustomButton
+            title="-"
+            handlePress={() => {
+              if (rightScore > 0) {
+                BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x03])
+
+                setRightScore(rightScore - 1)
+              }
+            }}
+            containerStyles='mx-4 bg-blue-500'
+            textStyles={'text-3xl'}
+          />
         </View>
       </View>
+      <View className='h-[30%] flex-row items-end'>
+        <CustomButton
+          title="Show Scoreboard"
+          handlePress={() => {
+            BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x05, 0x00])//set mode scoreboard
+          }}
+          containerStyles='mt-7 w-[90%] mx-4 bg-blue-500'
+          textStyles={'text-3xl'}
+        />
+      </View>
+
       {/* <View className='w-[100%] h-[5%] mb-10 flex-1'>
         <LinearGradient className='flex-1 items-center' colors={['white', 'transparent']} end={[]} />
       </View> */}

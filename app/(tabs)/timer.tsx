@@ -1,10 +1,11 @@
-import { View, Text, SafeAreaView, NativeModules, NativeEventEmitter, ImageBackground, ScrollView } from 'react-native'
+import { View, Text, SafeAreaView, NativeModules, NativeEventEmitter, ImageBackground, ScrollView, StyleSheet } from 'react-native'
 import React from 'react'
 import { useGlobalContext } from "../../context/GlobalProvider";
 import CustomButton from "../../components/CustomButton"
 // import { BleManager, Device } from 'react-native-ble-plx'
 import { useState } from "react";
 import base64 from 'react-native-base64'
+import WheelPicker from 'react-native-wheely';
 import BleManager, {
   BleDisconnectPeripheralEvent,
   BleManagerDidUpdateValueForCharacteristicEvent,
@@ -23,13 +24,28 @@ const Buffer = require("buffer").Buffer;
 const charactaristicRX = (error, characteristic) => {
   console.log(characteristic)
 }
+
+const range = (start: Number, end: Number, step = 1) => {
+  let output = [];
+  if (typeof end === 'undefined') {
+    end = start;
+    start = 0;
+  }
+  for (let i = start; i < end; i += step) {
+    output.push(i);
+  }
+  return output;
+};
+
 const Timer = () => {
   const { rightScore, leftScore, setRightScore, setLeftScore, peripherals, expectedLeftScore, setExpectedLeftScore, expectedRightScore, setExpectedRightScore } = useGlobalContext();
-
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerMinutes, setTimerMinutes] = useState(0);
 
   return (
-    <SafeAreaView className='bg-primary h-full w-full items-center'>
-      <View className='h-full, w-full flex-row items-start mt-5'>
+    <SafeAreaView className='bg-primary h-full w-full flex justify-end'>
+      <View className=''>
         <CustomButton
           title="Reset scores (Longpress)"
           handleLongPress={() => {
@@ -37,62 +53,42 @@ const Timer = () => {
             setLeftScore(0)
             BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x04])
           }}
-          containerStyles='mt-7 mx-4 bg-white flex-[90%]'
+          containerStyles='bg-white'
           textStyles={'text-3xl'}
         />
       </View>
-
-      <View className='h-[50%] w-full flex-row items-end'>
-        <View className="space-y-3 pb-5 flex-[40%]">
-          <CustomButton
-            title="+"
-            handlePress={() => {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x00])
-              if (leftScore < 199) { setLeftScore(leftScore + 1) }
-            }}
-            containerStyles='mt-7 mx-4 bg-red-500'
-            textStyles={'text-3xl'}
-          />
-          <Text className='text-gray-100 text-9xl text-center pt-7'>
-            {leftScore < 10 ? '0' : ''}{leftScore}
-          </Text>
-
-          <CustomButton
-            title="-"
-            handlePress={() => {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x01])
-              if (leftScore > 0) { setLeftScore(leftScore - 1) }
-            }}
-            containerStyles='mt-7 mx-4 bg-red-500'
-            textStyles={'text-3xl'}
-          />
-        </View>
-        <View className="space-y-3 pb-5 flex-[40%]">
-          <CustomButton
-            title="+"
-            handlePress={() => {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x02])
-              if (rightScore < 199) { setRightScore(rightScore + 1) }
-            }}
-            containerStyles='mt-7 mx-4 bg-blue-500'
-            textStyles={'text-3xl'}
-          />
-          <Text className='text-gray-100 text-9xl text-center pt-7'>
-            {rightScore < 10 ? '0' : ''}{rightScore}
-          </Text>
-          <CustomButton
-            title="-"
-            handlePress={() => {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x03])
-              if (rightScore > 0) {
-                setRightScore(rightScore - 1)
-              }
-            }}
-            containerStyles='mt-7 mx-4 bg-blue-500'
-            textStyles={'text-3xl'}
-          />
-        </View>
+      <View className='flex-row justify-center items-center'>
+        <WheelPicker
+          containerStyle={styles.container199}
+          selectedIndex={timerMinutes}
+          itemTextStyle={styles.text}
+          options={range(0, 200)}
+          onChange={(index) => setTimerMinutes(index)}
+          decelerationRate={"normal"}
+          itemHeight={140}
+          visibleRest={0}
+        />
+        <Text className='text-[100px] text-white -ml-6 -mr-6'> : </Text>
+        <WheelPicker
+          containerStyle={styles.container59}
+          selectedIndex={timerSeconds}
+          itemTextStyle={styles.text}
+          options={range(0, 60)}
+          onChange={(index) => setTimerSeconds(timerSeconds)}
+          decelerationRate={"normal"}
+          itemHeight={140}
+          visibleRest={0}
+        />
       </View>
+
+      <CustomButton
+        title="Show Timer"
+        handlePress={() => {
+          BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x05, 0x04])//set mode timer
+        }}
+        containerStyles='bg-blue-500'
+        textStyles={'text-3xl'}
+      />
       {/* <View className='w-[100%] h-[5%] mb-10 flex-1'>
         <LinearGradient className='flex-1 items-center' colors={['white', 'transparent']} end={[]} />
       </View> */}
@@ -117,3 +113,17 @@ const Timer = () => {
 }
 
 export default Timer
+
+const styles = StyleSheet.create({
+  container199: {
+    width: "50%",
+    alignItems: 'flex-end'
+  },
+  container59: {
+    width: "36%",
+    alignItems: 'flex-start'
+  },
+  text: {
+    fontSize: 100,
+  }
+})
