@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, NativeModules, NativeEventEmitter, ImageBackground, ScrollView, StyleSheet } from 'react-native'
+import { View, Text, SafeAreaView, NativeModules, NativeEventEmitter, ImageBackground, ScrollView, StyleSheet, Image } from 'react-native'
 import React from 'react'
 import { useGlobalContext } from "../../context/GlobalProvider";
 import CustomButton from "../../components/CustomButton"
@@ -15,6 +15,7 @@ import BleManager, {
   Peripheral,
   PeripheralInfo,
 } from 'react-native-ble-manager';
+import { icons } from '../../constants'
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -25,17 +26,32 @@ const charactaristicRX = (error, characteristic) => {
   console.log(characteristic)
 }
 
-const range = (start: Number, end: Number, step = 1) => {
+const range = (start: number, end: number, step = 1, isLeftSide: boolean = true) => {
   let output = [];
   if (typeof end === 'undefined') {
     end = start;
     start = 0;
   }
-  for (let i = start; i < end; i += step) {
-    output.push(i);
+  for (let i: number = start; i < end; i += step) {
+    if (isLeftSide) {
+      if (i > 99) { output.push(i.toString()); }
+      else if (i > 9) { output.push(" " + i.toString()); }
+      else {
+        output.push(" 0" + i.toString());
+      }
+    }
+    else {
+      if (i > 99) { output.push(i.toString()); }
+      else if (i > 9) { output.push(i.toString() + " "); }
+      else {
+        output.push("0" + i.toString() + " ");
+      }
+    }
   }
-  return output;
+  return output.reverse();
 };
+
+
 
 const Timer = () => {
   const { rightScore, leftScore, setRightScore, setLeftScore, peripherals, expectedLeftScore, setExpectedLeftScore, expectedRightScore, setExpectedRightScore } = useGlobalContext();
@@ -59,26 +75,41 @@ const Timer = () => {
       </View>
       <View className='flex-row justify-center items-center'>
         <WheelPicker
-          containerStyle={styles.container199}
-          selectedIndex={timerMinutes}
+          itemStyle={styles.item}
+          containerStyle={styles.containerLeft}
+          selectedIndicatorStyle={styles.indicator}
+          selectedIndex={199}
           itemTextStyle={styles.text}
-          options={range(0, 200)}
+          flatListProps={styles.flatList}
+          options={range(0, 200, 1, true)}
           onChange={(index) => setTimerMinutes(index)}
           decelerationRate={"normal"}
-          itemHeight={140}
+          itemHeight={180}
           visibleRest={0}
+
         />
-        <Text className='text-[100px] text-white -ml-6 -mr-6'> : </Text>
+        <Text className='text-[100px] text-white -ml-6 -mr-6 pb-6'> : </Text>
         <WheelPicker
-          containerStyle={styles.container59}
-          selectedIndex={timerSeconds}
+          itemStyle={styles.item}
+          containerStyle={styles.containerRight}
+          selectedIndicatorStyle={styles.indicator}
+          selectedIndex={59}
           itemTextStyle={styles.text}
-          options={range(0, 60)}
-          onChange={(index) => setTimerSeconds(timerSeconds)}
+          flatListProps={styles.flatList}
+          options={range(0, 60, 1, false)}
+          onChange={(index) => setTimerSeconds(index)}
           decelerationRate={"normal"}
-          itemHeight={140}
+          itemHeight={180}
           visibleRest={0}
         />
+        <Image className='absolute right-[-7%] scale-50'
+          source={icons.scroll}
+        />
+
+
+        <View className='w-[20%] h-[85%] absolute right-[0%] -z-10'>
+
+        </View>
       </View>
 
       <CustomButton
@@ -107,7 +138,11 @@ const Timer = () => {
         />
       </MaskedView> */}
 
-
+      <WheelPicker
+        selectedIndex={selectedIndex}
+        options={['Berlin', 'London', 'Amsterdam', 'Berlin', 'London', 'Amsterdam']}
+        onChange={(index) => setSelectedIndex(index)}
+      />
     </SafeAreaView>
   )
 }
@@ -115,15 +150,31 @@ const Timer = () => {
 export default Timer
 
 const styles = StyleSheet.create({
-  container199: {
-    width: "50%",
-    alignItems: 'flex-end'
+  containerLeft: {
+    width: "48%",
+    alignItems: 'flex-end',
+    top: -6
   },
-  container59: {
-    width: "36%",
-    alignItems: 'flex-start'
+  containerRight: {
+    width: "48%",
+    alignItems: 'flex-start',
+    top: -6
+  },
+
+  flatList: {
+
+  },
+  indicator: {
+    backgroundColor: 'transparent',
+
+  },
+  item: {
+    paddingHorizontal: 0,
+
   },
   text: {
-    fontSize: 100,
+    fontSize: 115,
+    color: 'white',
+
   }
 })
