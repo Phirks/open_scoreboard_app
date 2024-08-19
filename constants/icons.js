@@ -11,7 +11,8 @@ import logout from "../assets/icons/logout.png";
 import eyeHide from "../assets/icons/eye-hide.png";
 import eye from "../assets/icons/eye.png";
 import play from "../assets/icons/play.png";
-import scroll from "../assets/icons/scroll-white.png";
+import scroll from "../assets/icons/scroll.png";
+import doubleArrowGray from "../assets/icons/double-arrow-gray.png";
 
 export default {
   play,
@@ -28,4 +29,5 @@ export default {
   eyeHide,
   eye,
   scroll,
+  doubleArrowGray,
 };

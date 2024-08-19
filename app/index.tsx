@@ -53,7 +53,24 @@ declare module 'react-native-ble-manager' {
 }
 
 export default function App() {
-    const { leftScore, setLeftScore, rightScore, setRightScore, expectedLeftScore, setExpectedLeftScore, expectedRightScore, setExpectedRightScore, isScanning, setIsScanning, peripherals, setPeripherals, bleManagerEmitter2, setBleManagerEmitter2 } = useGlobalContext();
+    const {
+        leftScore, setLeftScore,
+        rightScore, setRightScore,
+        expectedLeftScore, setExpectedLeftScore,
+        expectedRightScore, setExpectedRightScore,
+        isScanning, setIsScanning,
+        peripherals, setPeripherals,
+        bleManagerEmitter2, setBleManagerEmitter2,
+        timerMinutes, setTimerMinutes,
+        timerSeconds, setTimerSeconds,
+        timerStarted, setTimerStarted,
+        alarmHour, setAlarmHour,
+        alarmMinute, setAlarmMinute,
+        alarmOn, setAlarmOn,
+        hour, setHour,
+        minute, setMinute,
+        setMilitaryTime, setSetMilitaryTime,
+    } = useGlobalContext();
 
 
     const startScan = () => {
@@ -380,12 +397,37 @@ export default function App() {
 
         bleManagerEmitter.addListener('BleManagerDidUpdateValueForCharacteristic', ({ value, peripheral, characteristic, service }) => {
             switch (value[0]) {
-                case 0:
+                case 0x00:
                     setRightScore(value[1])
                     break;
-                case 1:
+                case 0x01:
                     setLeftScore(value[1])
                     break;
+                case 0x06:
+                    setAlarmHour(value[1])
+                    break;
+                case 0x07:
+                    setAlarmMinute(value[1])
+                    break;
+                case 0x08:
+                    setTimerMinutes(value[1])
+                    break;
+                case 0x09:
+                    setTimerSeconds(value[1])
+                    break;
+                case 0x0A:
+                    setTimerStarted(value[1])
+                    break;
+                case 0x1A:
+                    setHour(value[1])
+                    break;
+                case 0x1B:
+                    setMinute(value[1])
+                    break;
+                case 0x04:
+                    setMilitaryTime(value[1])
+                    break;
+
                 default:
                     console.log("default")
                     break;
@@ -495,7 +537,8 @@ export default function App() {
                                     console.log(JSON.stringify(peripherals, null, 4))
 
                                     BleManager.startNotification("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400003-b5a3-f393-e0a9-e50e24dcca9e")
-
+                                    BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x06, new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()]);
+                                    BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x11]);
                                     router.push("/scoreboard")
                                 }}>
                                     <Text style={styles.scanButtonText}>

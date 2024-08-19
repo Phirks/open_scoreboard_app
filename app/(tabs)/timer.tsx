@@ -1,11 +1,11 @@
 import { View, Text, SafeAreaView, NativeModules, NativeEventEmitter, ImageBackground, ScrollView, StyleSheet, Image } from 'react-native'
-import React from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { useGlobalContext } from "../../context/GlobalProvider";
 import CustomButton from "../../components/CustomButton"
 // import { BleManager, Device } from 'react-native-ble-plx'
 import { useState } from "react";
 import base64 from 'react-native-base64'
-import WheelPicker from 'react-native-wheely';
+import WheelPicker from '../../components/WheelPicker';
 import BleManager, {
   BleDisconnectPeripheralEvent,
   BleManagerDidUpdateValueForCharacteristicEvent,
@@ -48,70 +48,152 @@ const range = (start: number, end: number, step = 1, isLeftSide: boolean = true)
       }
     }
   }
-  return output.reverse();
+  return output;
 };
 
 
 
 const Timer = () => {
-  const { rightScore, leftScore, setRightScore, setLeftScore, peripherals, expectedLeftScore, setExpectedLeftScore, expectedRightScore, setExpectedRightScore } = useGlobalContext();
+  const {
+    BLEManager,
+    rightScore, setRightScore,
+    leftScore, setLeftScore,
+    peripherals,
+    expectedLeftScore, setExpectedLeftScore,
+    expectedRightScore, setExpectedRightScore,
+    timerSeconds, setTimerSeconds,
+    timerMinutes, setTimerMinutes,
+    timerStarted, setTimerStarted,
+  } = useGlobalContext();
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [timerSeconds, setTimerSeconds] = useState(0);
-  const [timerMinutes, setTimerMinutes] = useState(0);
+
+  let intervalID: NodeJS.Timeout;
+
+  const tick = useCallback(() => {
+    setTimerSeconds(prevSeconds => {
+      if (!timerStarted) return prevSeconds;
+
+      if (prevSeconds > 0) {
+        return prevSeconds - 1;
+      } else if (timerMinutes > 0) {
+        setTimerMinutes(prevMinutes => prevMinutes - 1);
+        return 59;
+      } else {
+        return 0;
+      }
+    });
+  }, [timerStarted]);
+
+  useEffect(() => {
+
+    if (timerStarted) {
+      intervalID = setInterval(tick, 1000);
+    } else {
+      // Optionally clear the interval if the timer is not started
+      clearInterval(intervalID);
+    }
+
+    return () => clearInterval(intervalID);
+  }, [timerStarted, tick]);
+
 
   return (
-    <SafeAreaView className='bg-primary h-full w-full flex justify-end'>
-      <View className=''>
+    <SafeAreaView className='bg-primary h-full w-full flex justify-between'>
+      <View className='mt-[60px]'>
         <CustomButton
-          title="Reset scores (Longpress)"
-          handleLongPress={() => {
-            setRightScore(0)
-            setLeftScore(0)
-            BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x04])
+          title="Reset Timer (Longpress)"
+          handleLongPress={async () => {
+            await BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0B])
+            await BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, 0, 0]);
+            setTimerStarted(0)
+            setTimerMinutes(0)
+            setTimerSeconds(0)
           }}
-          containerStyles='bg-white'
+          containerStyles='bg-gray-400'
+          textStyles={'text-3xl'}
+        />
+
+        <View className='flex-row justify-center items-center'>
+          <WheelPicker
+            itemStyle={styles.item}
+            containerStyle={styles.containerLeft}
+            selectedIndicatorStyle={styles.indicator}
+            selectedIndex={timerMinutes}
+            itemTextStyle={styles.text}
+            flatListProps={styles.flatList}
+            options={range(0, 200, 1, true)}
+            onChange={async (index) => {
+              await setTimerMinutes(index);
+              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, index, timerSeconds]);
+            }}
+            decelerationRate={"normal"}
+            itemHeight={180}
+            visibleRest={0}
+            scrollEnabled={!timerStarted}
+          />
+          <Text className='text-[100px] text-white -ml-6 -mr-6 pb-6'> : </Text>
+          <WheelPicker
+            itemStyle={styles.item}
+            containerStyle={styles.containerRight}
+            selectedIndicatorStyle={styles.indicator}
+            selectedIndex={timerSeconds}
+            itemTextStyle={styles.text}
+            options={range(0, 60, 1, false)}
+            onChange={async (index) => {
+              await setTimerSeconds(index)
+              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, timerMinutes, index]);
+            }}
+            decelerationRate={"normal"}
+            itemHeight={180}
+            visibleRest={0}
+            scrollEnabled={!timerStarted}
+          />
+          {!timerStarted ? (
+            <Image className='absolute right-[1%] h-[110px] w-[56px]'
+              source={icons.scroll}
+            />
+          ) : null}
+
+          {!timerStarted ? (<Image className='absolute right-[22%] -top-[8%] scale-y-50 h-[70px] w-[70px] scale-x-100 opacity-10 -z-10'
+            source={icons.doubleArrowGray}
+          />) : null}
+          {!timerStarted ? (<Image className='absolute rotate-180 right-[22%] top-[68%] scale-y-50 h-[70px] w-[70px] scale-x-100 opacity-10 -z-10'
+            source={icons.doubleArrowGray}
+
+          />) : null}
+          {!timerStarted ? (<Image className='absolute left-[22%] -top-[8%] scale-y-50 h-[70px] w-[70px] scale-x-100 opacity-10 -z-10'
+            source={icons.doubleArrowGray}
+
+          />) : null}
+          {!timerStarted ? (<Image className='absolute rotate-180 left-[22%] top-[68%] scale-y-50 h-[70px] w-[70px] scale-x-100 opacity-10 -z-10'
+            source={icons.doubleArrowGray}
+
+          />) : null}
+
+          {!timerStarted ? (<View className='absolute right-[15%] w-[32%] h-[95%] border-[1px] border-gray-700 -z-20 rounded-2xl'></View>) : null}
+          {!timerStarted && timerMinutes < 100 ? (<View className='absolute left-[15%] w-[32%] h-[95%] border-[1px] border-gray-700  -z-20 rounded-2xl'></View>) : null}
+          {!timerStarted && timerMinutes > 99 ? (<View className='absolute left-[1%] w-[46%] h-[95%] border-[1px] border-gray-700  -z-20 rounded-2xl'></View>) : null}
+        </View>
+
+        <CustomButton
+          title={timerStarted ? "Pause Timer" : "Start Timer"}
+          handlePress={() => {
+            if (timerStarted == 0) {
+              console.log("start Timer")
+              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x09])
+              setTimerStarted(0x01);
+            }
+            else {
+              console.log("Stop Timer")
+              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0B])
+              setTimerStarted(0x00);
+            }
+
+          }}
+          containerStyles={timerStarted ? "bg-red-800" : "bg-green-900"}
           textStyles={'text-3xl'}
         />
       </View>
-      <View className='flex-row justify-center items-center'>
-        <WheelPicker
-          itemStyle={styles.item}
-          containerStyle={styles.containerLeft}
-          selectedIndicatorStyle={styles.indicator}
-          selectedIndex={199}
-          itemTextStyle={styles.text}
-          flatListProps={styles.flatList}
-          options={range(0, 200, 1, true)}
-          onChange={(index) => setTimerMinutes(index)}
-          decelerationRate={"normal"}
-          itemHeight={180}
-          visibleRest={0}
-
-        />
-        <Text className='text-[100px] text-white -ml-6 -mr-6 pb-6'> : </Text>
-        <WheelPicker
-          itemStyle={styles.item}
-          containerStyle={styles.containerRight}
-          selectedIndicatorStyle={styles.indicator}
-          selectedIndex={59}
-          itemTextStyle={styles.text}
-          flatListProps={styles.flatList}
-          options={range(0, 60, 1, false)}
-          onChange={(index) => setTimerSeconds(index)}
-          decelerationRate={"normal"}
-          itemHeight={180}
-          visibleRest={0}
-        />
-        <Image className='absolute right-[-7%] scale-50'
-          source={icons.scroll}
-        />
-
-
-        <View className='w-[20%] h-[85%] absolute right-[0%] -z-10'>
-
-        </View>
-      </View>
-
       <CustomButton
         title="Show Timer"
         handlePress={() => {
@@ -119,29 +201,6 @@ const Timer = () => {
         }}
         containerStyles='bg-blue-500'
         textStyles={'text-3xl'}
-      />
-      {/* <View className='w-[100%] h-[5%] mb-10 flex-1'>
-        <LinearGradient className='flex-1 items-center' colors={['white', 'transparent']} end={[]} />
-      </View> */}
-      {/* <MaskedView className='h-[10%] w-10 flex-1 items-center justify-center bg-white'
-        maskElement={
-          <LinearGradient className='flex-1 h-[100%] w-[100%]  items-center' colors={['white', 'transparent']} />
-        }
-      >
-        <CustomButton
-          title="-"
-          handlePress={() => {
-            console.log(JSON.stringify(peripherals, null, 4))
-          }}
-          containerStyles='mt-7 mx-4 bg-blue-500 w-10 h-[20%]'
-          textStyles={'text-3xl'}
-        />
-      </MaskedView> */}
-
-      <WheelPicker
-        selectedIndex={selectedIndex}
-        options={['Berlin', 'London', 'Amsterdam', 'Berlin', 'London', 'Amsterdam']}
-        onChange={(index) => setSelectedIndex(index)}
       />
     </SafeAreaView>
   )
