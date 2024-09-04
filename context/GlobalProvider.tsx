@@ -44,6 +44,7 @@ const GlobalProvider = ({ children }) => {
     const [hour, setHour] = useState(0);
     const [minute, setMinute] = useState(0);
     const [setMilitaryTime, setSetMilitaryTime] = useState(0);
+    const [peripheralId, setPeripheralId] = useState(null);
     const [peripherals, setPeripherals] = useState(
         new Map<Peripheral['id'], Peripheral>(),
     );
@@ -68,6 +69,7 @@ const GlobalProvider = ({ children }) => {
                 rightScore, setRightScore,
                 leftScore, setLeftScore,
                 isScanning, setIsScanning,
+                peripheralId, setPeripheralId,
                 peripherals, setPeripherals,
                 bleManagerEmitter2, setBleManagerEmitter2,
                 expectedRightScore, setExpectedRightScore,

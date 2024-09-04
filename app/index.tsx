@@ -17,6 +17,7 @@ import {
     TouchableHighlight,
     Pressable,
 } from 'react-native';
+import * as Linking from 'expo-linking';
 
 import { useGlobalContext } from "../context/GlobalProvider";
 
@@ -33,7 +34,7 @@ import BleManager, {
     PeripheralInfo,
 } from 'react-native-ble-manager';
 import { router } from 'expo-router';
-import { jsiConfigureProps } from 'react-native-reanimated/lib/typescript/reanimated2/core';
+import CustomButton from '@/components/CustomButton';
 
 const SECONDS_TO_SCAN_FOR = 1;
 const SERVICE_UUIDS: string[] = [];
@@ -41,7 +42,7 @@ const ALLOW_DUPLICATES = true;
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
-
+let intervalID2: NodeJS.Timeout;
 
 
 declare module 'react-native-ble-manager' {
@@ -51,14 +52,16 @@ declare module 'react-native-ble-manager' {
         connecting?: boolean;
     }
 }
-
+const prefix = Linking.createURL('/');
 export default function App() {
     const {
+        isConnected, setIsConnected,
         leftScore, setLeftScore,
         rightScore, setRightScore,
         expectedLeftScore, setExpectedLeftScore,
         expectedRightScore, setExpectedRightScore,
         isScanning, setIsScanning,
+        peripheralId, setPeripheralId,
         peripherals, setPeripherals,
         bleManagerEmitter2, setBleManagerEmitter2,
         timerMinutes, setTimerMinutes,
@@ -71,10 +74,13 @@ export default function App() {
         minute, setMinute,
         setMilitaryTime, setSetMilitaryTime,
     } = useGlobalContext();
+    const linking = {
+        prefixes: [prefix],
+    };
 
 
     const startScan = () => {
-        if (!isScanning) {
+        if (!isScanning && !isConnected) {
             // reset found peripherals before scan
             setPeripherals(new Map<Peripheral['id'], Peripheral>());
 
@@ -139,6 +145,11 @@ export default function App() {
         console.debug(
             `[handleDisconnectedPeripheral][${event.peripheral}] disconnected.`,
         );
+        if (JSON.stringify(peripherals, null, 4) == "{}") {
+            setIsConnected(false);
+            router.push("/")
+
+        }
         setPeripherals(map => {
             let p = map.get(event.peripheral);
             if (p) {
@@ -147,10 +158,12 @@ export default function App() {
             }
             return map;
         });
+        console.log(JSON.stringify(peripherals, null, 4));
     };
 
     const handleConnectPeripheral = (event: any) => {
         console.log(`[handleConnectPeripheral][${event.peripheral}] connected.`);
+        setIsConnected(true);
     };
 
     const handleUpdateValueForCharacteristic = (
@@ -163,12 +176,14 @@ export default function App() {
 
     const handleDiscoverPeripheral = (peripheral: Peripheral) => {
         console.debug('[handleDiscoverPeripheral] new BLE peripheral=', peripheral);
-        if (!peripheral.name) {
-            peripheral.name = 'NO NAME';
+        if (peripheral.name && peripheral.name.substring(0, 15) == "Open Scoreboard") {
+            setPeripherals(map => {
+                console.debug('[handleDiscoverPeripheral] new BLE peripheral=', peripheral);
+                return new Map(map.set(peripheral.id, peripheral));
+            });
         }
-        setPeripherals(map => {
-            return new Map(map.set(peripheral.id, peripheral));
-        });
+        else { }
+
     };
 
     const togglePeripheralConnection = async (peripheral: Peripheral) => {
@@ -230,6 +245,7 @@ export default function App() {
 
     const readCharacteristics = async () => {
         let services = await retrieveServices();
+        console.debug("try To Get Services");
 
         for (let peripheralInfo of services) {
             peripheralInfo.characteristics?.forEach(async c => {
@@ -277,8 +293,9 @@ export default function App() {
                 });
 
                 await BleManager.connect(peripheral.id);
+                setPeripheralId(peripheral.id);
+                router.push("/scoreboard")
                 console.debug(`[connectPeripheral][${peripheral.id}] connected.`);
-
                 setPeripherals(map => {
                     let p = map.get(peripheral.id);
                     if (p) {
@@ -347,6 +364,9 @@ export default function App() {
                     return map;
                 });
 
+                BleManager.startNotification(peripheral.id, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400003-b5a3-f393-e0a9-e50e24dcca9e")
+                BleManager.write(peripheral.id, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x06, new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()]);
+                BleManager.write(peripheral.id, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x11]);
                 // navigation.navigate('PeripheralDetails', {
                 //   peripheralData: peripheralData,
                 // });
@@ -410,10 +430,15 @@ export default function App() {
                     setAlarmMinute(value[1])
                     break;
                 case 0x08:
-                    setTimerMinutes(value[1])
+                    if (value[1] > -1) {
+                        setTimerMinutes(value[1])
+                    }
+
                     break;
                 case 0x09:
-                    setTimerSeconds(value[1])
+                    if (value[1] > -1) {
+                        setTimerSeconds(value[1])
+                    }
                     break;
                 case 0x0A:
                     setTimerStarted(value[1])
@@ -489,97 +514,42 @@ export default function App() {
     };
 
     const renderItem = ({ item }: { item: Peripheral }) => {
-        const backgroundColor = item.connected ? '#069400' : Colors.white;
+        const backgroundColor = item.connected ? '#FFA500' : '#304a57';
         return (
             <TouchableHighlight
                 underlayColor="#0082FC"
+                className='bg-primary'
                 onPress={() => togglePeripheralConnection(item)}>
-                <View style={[styles.row, { backgroundColor }]}>
-                    <Text style={styles.peripheralName}>
-                        {/* completeLocalName (item.name) & shortAdvertisingName (advertising.localName) may not always be the same */}
-                        {item.name} - {item?.advertising?.localName}
-                        {item.connecting && ' - Connecting...'}
+                <View className='flex items-center bg-gray-700 rounded-md pt-4 pb-4 ml-4 mr-4'>
+                    <Text className='font-pregular text-xl'>
+                        {item.connecting ? ' - Connecting...' : item.name}
                     </Text>
-                    <Text style={styles.rssi}>RSSI: {item.rssi}</Text>
-                    <Text style={styles.peripheralId}>{item.id}</Text>
-                </View>
-            </TouchableHighlight>
+                </View >
+            </TouchableHighlight >
         );
     };
 
+    useEffect(() => {
+        startScan();
+    }, [])
+
     return (
-        <>
-            <StatusBar />
-            <SafeAreaView style={styles.body}>
-                <View style={styles.buttonGroup}>
-                    <Pressable style={styles.scanButton} onPress={startScan}>
-                        <Text style={styles.scanButtonText}>
-                            {isScanning ? 'Scanning...' : 'Scan Bluetooth'}
-                        </Text>
-                    </Pressable>
-
-                    <Pressable style={styles.scanButton} onPress={retrieveConnected}>
-                        <Text style={styles.scanButtonText} lineBreakMode='middle'>
-                            {'Retrieve connected peripherals'}
-                        </Text>
-                    </Pressable>
-
-                    <Pressable style={styles.scanButton} onPress={readCharacteristics}>
-                        <Text style={styles.scanButtonText}>Read characteristics</Text>
-                    </Pressable>
-                </View>
-
-                {Platform.OS === 'android' &&
-                    (
-                        <>
-                            <View style={styles.buttonGroup}>
-                                <Pressable style={styles.scanButton} onPress={() => {
-                                    console.log(JSON.stringify(peripherals, null, 4))
-
-                                    BleManager.startNotification("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400003-b5a3-f393-e0a9-e50e24dcca9e")
-                                    BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x06, new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()]);
-                                    BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x11]);
-                                    router.push("/scoreboard")
-                                }}>
-                                    <Text style={styles.scanButtonText}>
-                                        {'Scan Companion'}
-                                    </Text>
-                                </Pressable>
-
-                                <Pressable style={styles.scanButton} onPress={getAssociatedPeripherals}>
-                                    <Text style={styles.scanButtonText}>
-                                        {'Get Associated Peripherals'}
-                                    </Text>
-                                </Pressable>
-                            </View>
-
-                            <View style={styles.buttonGroup}>
-                                <Pressable style={styles.scanButton} onPress={enableBluetooth}>
-                                    <Text style={styles.scanButtonText}>
-                                        {'Enable Bluetooh'}
-                                    </Text>
-                                </Pressable>
-                            </View>
-                        </>
-                    )}
-
-                {Array.from(peripherals.values()).length === 0 && (
-                    <View style={styles.row}>
-                        <Text style={styles.noPeripherals}>
-                            No Peripherals, press "Scan Bluetooth" above.
-                        </Text>
-                    </View>
-                )}
-
-
+        <SafeAreaView className='bg-primary h-[100%] flex justify-center'>
+            <View className='h-[30%] border-[1px] border-white ml-2 mr-2 rounded-2xl pt-3 pl-1 pr-1'>
                 <FlatList
                     data={Array.from(peripherals.values())}
                     contentContainerStyle={{ rowGap: 12 }}
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
                 />
-            </SafeAreaView>
-        </>
+            </View>
+            <CustomButton
+                title="Show Scoreboard"
+                handlePress={startScan}
+                containerStyles='mt-7 w-[90%] mx-4 bg-blue-500'
+                textStyles={'text-3xl'}
+            />
+        </SafeAreaView>
     );
 };
 

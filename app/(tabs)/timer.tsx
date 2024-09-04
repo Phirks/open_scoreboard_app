@@ -64,37 +64,41 @@ const Timer = () => {
     timerSeconds, setTimerSeconds,
     timerMinutes, setTimerMinutes,
     timerStarted, setTimerStarted,
+    peripheralId, setPeripheralId,
   } = useGlobalContext();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   let intervalID: NodeJS.Timeout;
 
-  const tick = useCallback(() => {
-    setTimerSeconds(prevSeconds => {
-      if (!timerStarted) return prevSeconds;
+  // const tick = useCallback(() => {
+  //   setTimerSeconds(prevSeconds => {
+  //     if (!timerStarted) return prevSeconds;
+  //     if (prevSeconds > 0) {
+  //       return prevSeconds - 1;
+  //     } else if (timerMinutes > 0) {
+  //       return 59;
+  //     } else {
+  //       return 0;
+  //     }
+  //   });
+  //   setTimerMinutes(prevMinutes => {
+  //     if (!timerStarted || prevMinutes == 0 || timerSeconds != 0) { return prevMinutes; }
+  //     else { return prevMinutes - 1; }
+  //   });
 
-      if (prevSeconds > 0) {
-        return prevSeconds - 1;
-      } else if (timerMinutes > 0) {
-        setTimerMinutes(prevMinutes => prevMinutes - 1);
-        return 59;
-      } else {
-        return 0;
-      }
-    });
-  }, [timerStarted]);
+  // }, [timerStarted]);
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    if (timerStarted) {
-      intervalID = setInterval(tick, 1000);
-    } else {
-      // Optionally clear the interval if the timer is not started
-      clearInterval(intervalID);
-    }
+  //   if (timerStarted) {
+  //     intervalID = setInterval(tick, 1000);
+  //   } else {
+  //     // Optionally clear the interval if the timer is not started
+  //     clearInterval(intervalID);
+  //   }
 
-    return () => clearInterval(intervalID);
-  }, [timerStarted, tick]);
+  //   return () => clearInterval(intervalID);
+  // }, [timerStarted, tick]);
 
 
   return (
@@ -103,8 +107,8 @@ const Timer = () => {
         <CustomButton
           title="Reset Timer (Longpress)"
           handleLongPress={async () => {
-            await BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0B])
-            await BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, 0, 0]);
+            await BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0B])
+            await BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, 0, 0]);
             setTimerStarted(0)
             setTimerMinutes(0)
             setTimerSeconds(0)
@@ -124,7 +128,7 @@ const Timer = () => {
             options={range(0, 200, 1, true)}
             onChange={async (index) => {
               await setTimerMinutes(index);
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, index, timerSeconds]);
+              BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, index, timerSeconds]);
             }}
             decelerationRate={"normal"}
             itemHeight={180}
@@ -141,7 +145,7 @@ const Timer = () => {
             options={range(0, 60, 1, false)}
             onChange={async (index) => {
               await setTimerSeconds(index)
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, timerMinutes, index]);
+              BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, timerMinutes, index]);
             }}
             decelerationRate={"normal"}
             itemHeight={180}
@@ -180,12 +184,12 @@ const Timer = () => {
           handlePress={() => {
             if (timerStarted == 0) {
               console.log("start Timer")
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x09])
+              BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x09])
               setTimerStarted(0x01);
             }
             else {
               console.log("Stop Timer")
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0B])
+              BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0B])
               setTimerStarted(0x00);
             }
 
@@ -197,7 +201,7 @@ const Timer = () => {
       <CustomButton
         title="Show Timer"
         handlePress={() => {
-          BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x05, 0x04])//set mode timer
+          BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x05, 0x04])//set mode timer
         }}
         containerStyles='bg-blue-500'
         textStyles={'text-3xl'}

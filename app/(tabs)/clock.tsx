@@ -70,6 +70,9 @@ const Clock = () => {
     alarmHour, setAlarmHour,
     alarmMinute, setAlarmMinute,
     alarmOn, setAlarmOn,
+    hour, setHour,
+    minute, setMinute,
+    peripheralId, setPeripheralId,
   } = useGlobalContext();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -104,16 +107,17 @@ const Clock = () => {
 
 
   return (
-    <SafeAreaView className='bg-primary h-full w-full flex justify-between'>
-      <Text className='text-white'>{ }</Text>
-      <Text className='text-white'>{ }</Text>
-      <Text className='text-white'>{ }</Text>
-      <View className='mt-[60px]'>
+    <SafeAreaView className='bg-primary h-full w-full flex justify-start'>
+      <View className='items-center mt-20'>
+        <Text className='text-white text-[130px]'>{hour}:{minute < 10 ? "0" + minute : minute}</Text>
+      </View>
+
+      <View className='mt-[30px]'>
         <CustomButton
-          title="Reset Timer (Longpress)"
+          title="Reset Alarm (Longpress)"
           handleLongPress={async () => {
-            await BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0B])
-            await BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, 0, 0]);
+            await BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0B])
+            await BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x08, 0, 0]);
             setAlarmHour(0)
             setAlarmMinute(0)
             setAlarmOn(0)
@@ -133,7 +137,7 @@ const Clock = () => {
             options={range(0, 24, 1, true)}
             onChange={async (index) => {
               await setAlarmHour(index);
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0C, index, alarmMinute]);
+              BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0C, index, alarmMinute]);
             }}
             decelerationRate={"normal"}
             itemHeight={180}
@@ -150,7 +154,7 @@ const Clock = () => {
             options={range(0, 60, 1, false)}
             onChange={async (index) => {
               await setAlarmMinute(index)
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0C, alarmHour, index]);
+              BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0C, alarmHour, index]);
             }}
             decelerationRate={"normal"}
             itemHeight={180}
@@ -186,11 +190,11 @@ const Clock = () => {
           title={alarmOn ? "Alarm is On" : "Alarm is Off"}
           handlePress={() => {
             if (alarmOn == 0) {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0D])
+              BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0D])
               setAlarmOn(0x01);
             }
             else {
-              BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0E])
+              BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x0E])
               setAlarmOn(0x00);
             }
 
@@ -202,7 +206,7 @@ const Clock = () => {
       <CustomButton
         title="Show Clock"
         handlePress={() => {
-          BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x05, 0x01])//set mode clock
+          BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x05, 0x01])//set mode clock
         }}
         containerStyles='bg-blue-500'
         textStyles={'text-3xl'}

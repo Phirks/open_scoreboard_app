@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.phirks.aora",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "Need to use Bluetooth to connect to device"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,11 +34,6 @@
     "plugins": [
       "expo-router",
       "react-native-ble-plx"
-      // {
-      //   "isBackgroundEnabled": true,
-      //   "modes":["peripheral","central"],
-      //   "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to bluetooth devices"
-      // }
     ],
     "experiments": {
       "typedRoutes": true

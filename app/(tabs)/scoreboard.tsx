@@ -24,7 +24,9 @@ const charactaristicRX = (error, characteristic) => {
   console.log(characteristic)
 }
 const Scoreboard = () => {
-  const { rightScore, leftScore, setRightScore, setLeftScore, peripherals, expectedLeftScore, setExpectedLeftScore, expectedRightScore, setExpectedRightScore } = useGlobalContext();
+  const {
+    peripheralId, setPeripheralId,
+    rightScore, leftScore, setRightScore, setLeftScore, peripherals, expectedLeftScore, setExpectedLeftScore, expectedRightScore, setExpectedRightScore } = useGlobalContext();
 
 
   return (
@@ -35,7 +37,7 @@ const Scoreboard = () => {
           handleLongPress={() => {
             setRightScore(0)
             setLeftScore(0)
-            BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x04])
+            BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x04])
           }}
           containerStyles='mt-7 mx-4 bg-white flex-[90%]'
           textStyles={'text-3xl'}
@@ -48,7 +50,7 @@ const Scoreboard = () => {
             title="+"
             handlePress={() => {
               if (leftScore < 199) {
-                BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x00])
+                BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x00])
                 setLeftScore(leftScore + 1)
               }
             }}
@@ -63,7 +65,7 @@ const Scoreboard = () => {
             title="-"
             handlePress={() => {
               if (leftScore > 0) {
-                BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x01])
+                BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x01])
                 setLeftScore(leftScore - 1)
               }
             }}
@@ -76,7 +78,7 @@ const Scoreboard = () => {
             title="+"
             handlePress={() => {
               if (rightScore < 199) {
-                BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x02])
+                BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x02])
                 setRightScore(rightScore + 1)
               }
             }}
@@ -90,7 +92,7 @@ const Scoreboard = () => {
             title="-"
             handlePress={() => {
               if (rightScore > 0) {
-                BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x03])
+                BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x03])
 
                 setRightScore(rightScore - 1)
               }
@@ -104,7 +106,7 @@ const Scoreboard = () => {
         <CustomButton
           title="Show Scoreboard"
           handlePress={() => {
-            BleManager.write("F0:0A:33:69:AD:C1", "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x05, 0x00])//set mode scoreboard
+            BleManager.write(peripheralId, "6e400001-b5a3-f393-e0a9-e50e24dcca9e", "6e400002-b5a3-f393-e0a9-e50e24dcca9e", [0x05, 0x00])//set mode scoreboard
           }}
           containerStyles='mt-7 w-[90%] mx-4 bg-blue-500'
           textStyles={'text-3xl'}
